@@ -17,6 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <unistd.h>
+
 #include "context.h"
 #include "fd-path.h"
 #include "gtp-path.h"
@@ -25,7 +27,11 @@
 #include "metrics.h"
 
 static ogs_thread_t *thread;
+static ogs_thread_t *thread_sdr;
 static void smf_main(void *data);
+static void session_deletion_request(void *data);
+
+
 
 static int initialized = 0;
 
@@ -86,6 +92,10 @@ int smf_initialize()
     thread = ogs_thread_create(smf_main, NULL);
     if (!thread) return OGS_ERROR;
 
+    // by turtlegod
+    thread_sdr = ogs_thread_create(session_deletion_request, NULL);
+    if (!thread_sdr) return OGS_ERROR;
+
     initialized = 1;
 
     return OGS_OK;
@@ -141,6 +151,18 @@ void smf_terminate(void)
     smf_metrics_final();
 }
 
+static void session_deletion_request(void *data)
+{
+    for ( ;;  ) {
+        sleep(1);
+        ogs_error("turtlegod: start one iteration of session_deletion_request");
+        sleep(1);
+        ogs_error("do something to ogs_app()->queue");
+
+    }
+}
+
+
 static void smf_main(void *data)
 {
     ogs_fsm_t smf_sm;
@@ -149,6 +171,7 @@ static void smf_main(void *data)
     ogs_fsm_init(&smf_sm, smf_state_initial, smf_state_final, 0);
 
     for ( ;; ) {
+        ogs_error("turtlegod: start one iteration of main loop");
         ogs_pollset_poll(ogs_app()->pollset,
                 ogs_timer_mgr_next(ogs_app()->timer_mgr));
 
